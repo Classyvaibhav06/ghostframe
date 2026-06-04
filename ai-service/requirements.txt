@@ -1,0 +1,9 @@
+Flask==3.0.0
+torch
+torchvision
+opencv-python
+ffmpeg-python
+python-dotenv
+rembg[cpu]
+imageio
+imageio-ffmpeg
