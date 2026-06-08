@@ -100,5 +100,39 @@ def process_video(input_path, task_id):
     cap.release()
     writer.close()
     
-    print(f"Finished processing. Output saved to {output_path}")
+    print(f"Finished visual processing. Output saved to {output_path}")
+    
+    # Re-add the original audio track back to the final video using FFmpeg
+    try:
+        import subprocess
+        
+        # Try to use imageio-ffmpeg's built-in binary, otherwise fallback to system ffmpeg
+        try:
+            import imageio_ffmpeg
+            ffmpeg_cmd = imageio_ffmpeg.get_ffmpeg_exe()
+        except ImportError:
+            ffmpeg_cmd = "ffmpeg"
+
+        final_output_path = output_path.replace(".webm", "_audio.webm")
+        cmd = [
+            ffmpeg_cmd, "-y", 
+            "-i", output_path,          # The silent processed WebM
+            "-i", input_path,           # The original MP4/video with audio
+            "-map", "0:v:0",            # Take video track from the WebM
+            "-map", "1:a:0?",           # Take audio track from the original
+            "-c:v", "copy",             # Keep the transparent video exactly as-is
+            "-c:a", "libvorbis",        # Compress audio for WebM compatibility
+            final_output_path
+        ]
+        print("Muxing audio back into video...")
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        
+        if result.returncode == 0 and os.path.exists(final_output_path):
+            os.replace(final_output_path, output_path)
+            print("Successfully added audio back.")
+        else:
+            print("Original video had no audio or muxing failed. Proceeding with silent video.")
+    except Exception as e:
+        print(f"Failed to add audio: {e}")
+
     return output_path
