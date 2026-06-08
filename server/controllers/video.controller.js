@@ -10,6 +10,13 @@ exports.uploadVideo = async (req, res) => {
 
     const { originalname, path: inputPath } = req.file;
 
+    if (req.user.planType === 'free' && req.user.videosProcessed >= 5) {
+      return res.status(403).json({ message: 'Free plan limit reached. Maximum 5 videos allowed.' });
+    }
+
+    req.user.videosProcessed += 1;
+    await req.user.save();
+
     const task = await VideoTask.create({
       user: req.user.id,
       originalFilename: originalname,
@@ -93,6 +100,90 @@ exports.updateProgress = async (req, res) => {
     }
     
     res.status(200).json({ message: 'Progress updated' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    const { originalname, path: inputPath } = req.file;
+
+    if (req.user.planType === 'free' && req.user.imagesProcessed >= 25) {
+      return res.status(403).json({ message: 'Free plan limit reached. Maximum 25 images allowed.' });
+    }
+
+    req.user.imagesProcessed += 1;
+    await req.user.save();
+
+    const task = await VideoTask.create({
+      user: req.user.id,
+      originalFilename: originalname,
+      inputPath: inputPath,
+      status: 'pending' // Technically it processes synchronously via axios right here
+    });
+
+    res.status(201).json({
+      message: 'Image uploaded and processing started',
+      taskId: task._id
+    });
+
+    // Make an HTTP request to the python AI service
+    const axios = require('axios');
+    const pythonPort = process.env.PYTHON_PORT || 8000;
+    try {
+      const response = await axios.post(`http://localhost:${pythonPort}/process-image`, {
+        taskId: task._id,
+        inputPath: inputPath
+      });
+
+      // Update DB
+      task.status = 'completed';
+      task.outputPath = response.data.outputPath;
+      await task.save();
+
+      // Emit success to frontend
+      if (req.io) {
+        req.io.to(task._id.toString()).emit('status_update', {
+          status: 'completed',
+          outputPath: task.outputPath
+        });
+      }
+    } catch (pyError) {
+      task.status = 'failed';
+      await task.save();
+      if (req.io) {
+        req.io.to(task._id.toString()).emit('status_update', {
+          status: 'failed',
+          errorMessage: pyError.message
+        });
+      }
+    }
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.downloadImage = async (req, res) => {
+  try {
+    const task = await VideoTask.findById(req.params.id);
+    
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+    if (!task.outputPath) {
+      return res.status(400).json({ message: 'Image not processed yet' });
+    }
+
+    const path = require('path');
+    const baseName = path.parse(task.originalFilename).name;
+    res.download(task.outputPath, `processed_${baseName}.png`);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -136,3 +136,29 @@ def process_video(input_path, task_id):
         print(f"Failed to add audio: {e}")
 
     return output_path
+
+def process_image(input_path, task_id):
+    print(f"Starting image processing for {input_path} with rembg")
+    
+    output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'outputs'))
+    os.makedirs(output_dir, exist_ok=True)
+    
+    output_filename = f"processed_{task_id}.png"
+    output_path = os.path.join(output_dir, output_filename)
+    
+    # Read the image using cv2 (supports jpg, png, webp, bmp, tiff, etc.)
+    img = cv2.imread(input_path)
+    if img is None:
+        raise Exception(f"Could not open image file: {input_path}")
+        
+    try:
+        # rembg remove() handles BGR numpy arrays perfectly
+        output = remove(img, session=session)
+        
+        # Save the RGBA output to PNG
+        cv2.imwrite(output_path, output)
+        print(f"Finished visual processing. Output saved to {output_path}")
+        return output_path
+    except Exception as e:
+        print(f"Error processing image: {e}")
+        raise e

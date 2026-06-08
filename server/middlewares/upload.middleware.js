@@ -16,14 +16,14 @@ const storage = multer.diskStorage({
 });
 
 function checkFileType(file, cb) {
-  const filetypes = /mp4|mov|avi|mkv|webm/;
+  const filetypes = /mp4|mov|avi|mkv|webm|jpg|jpeg|png|webp|bmp|tiff/;
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = filetypes.test(file.mimetype);
+  const mimetype = filetypes.test(file.mimetype) || file.mimetype.startsWith('image/');
 
   if (extname && mimetype) {
     return cb(null, true);
   } else {
-    cb(new Error('Images and Audio are not allowed. Please upload a video file.'));
+    cb(new Error('Invalid file type. Please upload a supported video or image file.'));
   }
 }
 

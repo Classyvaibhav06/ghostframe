@@ -12,6 +12,19 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  planType: {
+    type: String,
+    enum: ['free', 'pro'],
+    default: 'free'
+  },
+  imagesProcessed: {
+    type: Number,
+    default: 0
+  },
+  videosProcessed: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now,

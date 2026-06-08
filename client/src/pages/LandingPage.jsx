@@ -1,58 +1,165 @@
 import { Link } from 'react-router-dom';
-import { Sparkles, Zap, Shield } from 'lucide-react';
-import { BackgroundBeams } from '../components/ui/background-beams';
-import { HoverBorderGradient } from '../components/ui/hover-border-gradient';
+import { Workflow, ShieldCheck, Zap } from 'lucide-react'; 
+import { motion } from 'framer-motion';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.2
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15
+    }
+  }
+};
 
 function LandingPage() {
   return (
-    <div className="relative min-h-[85vh] flex flex-col items-center justify-center overflow-hidden w-full">
-      <BackgroundBeams />
+    <div className="relative min-h-[calc(100vh-64px)] flex flex-col items-center overflow-hidden w-full bg-[#0a0a0a] font-sans selection:bg-purple-500/30">
       
-      <div className="relative z-10 flex flex-col items-center text-center px-4 max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-sm text-zinc-300">
-          <Sparkles className="w-4 h-4 text-purple-400" />
-          <span>Goodbye green screens</span>
-        </div>
-        
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white leading-tight">
-          Erase video backgrounds <br className="hidden md:block" />
-          in <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-500">one click.</span>
-        </h1>
-        
-        <p className="text-lg text-zinc-400 max-w-xl mx-auto">
-          Drop in any video and get a perfectly transparent cutout back. It's fast, completely free, and runs entirely on your device.
-        </p>
+      {/* Original GhostFrame Dot Pattern */}
+      <div className="absolute inset-0 z-0 pointer-events-none" 
+           style={{
+             backgroundImage: 'radial-gradient(circle at center, rgba(255,255,255,0.15) 1px, transparent 1px)',
+             backgroundSize: '30px 30px',
+             maskImage: 'radial-gradient(ellipse 80% 80% at 50% 10%, black 50%, transparent 100%)',
+             WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 10%, black 50%, transparent 100%)'
+           }}>
+      </div>
 
-        <div className="pt-8">
-          <Link to="/upload">
-            <HoverBorderGradient
-              containerClassName="rounded-full"
-              as="button"
-              className="bg-black text-white px-10 py-4 text-lg"
-            >
-              Start Processing Now
-            </HoverBorderGradient>
+      {/* Hero Section */}
+      <motion.div 
+        className="relative z-10 w-full max-w-5xl mx-auto px-6 pt-32 pb-24 text-center flex flex-col items-center justify-center"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Top pill */}
+        <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#131416] border border-white/5 mb-8">
+          <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+          <span className="text-xs font-medium text-zinc-300 tracking-wide uppercase">GhostFrame V2.0 IS NOW LIVE</span>
+        </motion.div>
+        
+        {/* Main Heading */}
+        <motion.div variants={itemVariants}>
+          <h1 className="text-5xl md:text-6xl lg:text-[4.75rem] font-medium tracking-tight text-white leading-[1.15] mb-6 max-w-5xl mx-auto">
+            Erase <span className="text-transparent" style={{ WebkitTextStroke: '1.5px #a855f7' }}>video & image</span><br className="hidden md:block" />
+            backgrounds for fast-moving<br className="hidden md:block" />
+            <span className="text-transparent" style={{ WebkitTextStroke: '1.5px #a855f7' }}>creators</span>
+          </h1>
+        </motion.div>
+        
+        {/* Subheading */}
+        <motion.p variants={itemVariants} className="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+          Replace your green screens with the AI solution<br className="hidden md:block" /> that's easy to use and loved by creators and editors.
+        </motion.p>
+        
+        {/* Buttons */}
+        <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link to="/upload" className="w-full sm:w-auto">
+            <button className="w-full sm:w-auto px-8 py-3.5 bg-white text-black font-medium rounded hover:bg-zinc-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)] cursor-pointer">
+              Start processing for free
+            </button>
           </Link>
+          <Link to="/how-it-works" className="w-full sm:w-auto">
+            <button className="w-full sm:w-auto px-8 py-3.5 text-white font-medium rounded border border-white/20 hover:bg-white/5 transition-colors cursor-pointer">
+              Read the Docs
+            </button>
+          </Link>
+        </motion.div>
+      </motion.div>
+
+      {/* Trusted By / Logos Section */}
+      <motion.div 
+        className="w-full border-y border-white/[0.05] py-10 relative z-10"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 1 }}
+      >
+        <div className="max-w-5xl mx-auto px-6">
+          <p className="text-center text-xs font-medium tracking-[0.2em] text-zinc-500 uppercase mb-8">Perfect for your workflow</p>
+          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60 grayscale">
+            {/* Minimalist text representations of tools */}
+            <span className="text-xl font-bold tracking-tighter text-white">Premiere Pro</span>
+            <span className="text-xl font-bold tracking-tight text-white flex items-center gap-1"><Zap className="w-5 h-5"/> CapCut</span>
+            <span className="text-xl font-bold text-white">YouTube</span>
+            <span className="text-xl font-bold tracking-widest text-white italic">TikTok</span>
+            <span className="text-xl font-bold text-white tracking-tighter">DaVinci</span>
+            <span className="text-xl font-bold text-white tracking-widest">AE</span>
+          </div>
         </div>
+      </motion.div>
+
+      {/* How it Works Section */}
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-6 pt-24 pb-32 flex-grow">
+        <motion.div 
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, type: "spring" }}
+        >
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-white mb-4">Flawless Extraction</h2>
+            <p className="text-zinc-400 max-w-2xl mx-auto">
+            Upload your video or image and let our cloud AI handle the rest.<br className="hidden md:block" /> No complex software required, it just works.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Cards Grid */}
+        <motion.div 
+          className="grid md:grid-cols-3 gap-6"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+        >
+          {/* Card 1 */}
+          <motion.div variants={itemVariants} className="group p-8 rounded-none bg-[#131416] border border-white/[0.05] hover:border-[#a855f7]/30 transition-colors flex flex-col h-full cursor-pointer relative overflow-hidden">
+            <div className="w-12 h-12 rounded bg-black border border-white/10 flex items-center justify-center mb-6 text-zinc-400 group-hover:text-white transition-colors">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-medium text-white mb-3">Upload</h3>
+            <p className="text-zinc-400 text-sm leading-relaxed"><strong className="text-zinc-200">Drag</strong> and drop your raw media files into our secure vault.</p>
+          </motion.div>
+
+          {/* Card 2 */}
+          <motion.div variants={itemVariants} className="group p-8 rounded-none bg-[#131416] border border-white/[0.05] hover:border-[#a855f7]/30 transition-colors flex flex-col h-full cursor-pointer relative overflow-hidden">
+            <div className="w-12 h-12 rounded bg-black border border-white/10 flex items-center justify-center mb-6 text-zinc-400 group-hover:text-white transition-colors">
+              <Workflow className="w-6 h-6 stroke-[1.5]" />
+            </div>
+            <h3 className="text-xl font-medium text-white mb-3">Process</h3>
+            <p className="text-zinc-400 text-sm leading-relaxed"><strong className="text-zinc-200">Wait</strong> while our neural networks automatically rotoscope every frame.</p>
+          </motion.div>
+
+          {/* Card 3 */}
+          <motion.div variants={itemVariants} className="group p-8 rounded-none bg-[#131416] border border-white/[0.05] hover:border-[#a855f7]/30 transition-colors flex flex-col h-full cursor-pointer relative overflow-hidden">
+            <div className="w-12 h-12 rounded bg-black border border-white/10 flex items-center justify-center mb-6 text-zinc-400 group-hover:text-white transition-colors">
+              <ShieldCheck className="w-6 h-6 stroke-[1.5]" />
+            </div>
+            <h3 className="text-xl font-medium text-white mb-3">Download</h3>
+            <p className="text-zinc-400 text-sm leading-relaxed"><strong className="text-zinc-200">Grab</strong> your high-quality transparent WebM file instantly.</p>
+          </motion.div>
+        </motion.div>
       </div>
 
-      <div className="relative z-10 grid md:grid-cols-3 gap-8 max-w-6xl mx-auto w-full px-6 mt-32">
-        <div className="p-8 rounded-3xl border border-white/5 bg-white/5 backdrop-blur-sm text-center hover:bg-white/10 transition-colors">
-          <Zap className="w-8 h-8 text-purple-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">Native Resolution</h3>
-          <p className="text-zinc-400 text-sm leading-relaxed">We process every single frame at 100% native resolution to guarantee ultra-crisp edges and no quality loss.</p>
-        </div>
-        <div className="p-8 rounded-3xl border border-white/5 bg-white/5 backdrop-blur-sm text-center hover:bg-white/10 transition-colors">
-          <Sparkles className="w-8 h-8 text-blue-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">True Transparency</h3>
-          <p className="text-zinc-400 text-sm leading-relaxed">No more green fringes. You get a perfect WebM file with a true alpha-channel ready to drop into any video editor.</p>
-        </div>
-        <div className="p-8 rounded-3xl border border-white/5 bg-white/5 backdrop-blur-sm text-center hover:bg-white/10 transition-colors">
-          <Shield className="w-8 h-8 text-emerald-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-white mb-2">100% Secure</h3>
-          <p className="text-zinc-400 text-sm leading-relaxed">Your files never linger. They are processed securely and deleted from our servers the moment you download.</p>
-        </div>
-      </div>
     </div>
   );
 }

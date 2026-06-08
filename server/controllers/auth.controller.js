@@ -29,6 +29,9 @@ exports.registerUser = async (req, res) => {
       res.status(201).json({
         _id: user._id,
         email: user.email,
+        planType: user.planType,
+        imagesProcessed: user.imagesProcessed,
+        videosProcessed: user.videosProcessed,
         token: generateToken(user._id)
       });
     } else {
@@ -49,6 +52,9 @@ exports.loginUser = async (req, res) => {
       res.json({
         _id: user._id,
         email: user.email,
+        planType: user.planType,
+        imagesProcessed: user.imagesProcessed,
+        videosProcessed: user.videosProcessed,
         token: generateToken(user._id)
       });
     } else {
