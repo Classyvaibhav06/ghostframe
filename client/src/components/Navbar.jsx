@@ -15,7 +15,7 @@ function Navbar() {
           </Link>
           <div className="flex gap-4">
             <Link to="/upload">
-              <Button variant="ghost">Try for free</Button>
+              <Button variant="ghost">Try it out</Button>
             </Link>
             <Link to="/login">
               <Button>Login</Button>
