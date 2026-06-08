@@ -51,7 +51,7 @@ export const FileUpload = ({ onChange, className }) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept="video/*"
+        accept="video/*,image/*"
         onChange={handleFileChange}
         className="hidden"
       />

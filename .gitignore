@@ -5,3 +5,4 @@ outputs/
 .DS_Store
 *.pem
 ghostframe-key.pem
+memory.md
