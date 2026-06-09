@@ -6,3 +6,4 @@ outputs/
 *.pem
 ghostframe-key.pem
 memory.md
+deployment_guide.md
