@@ -20,6 +20,7 @@ function UploadPage() {
   const [outputPath, setOutputPath] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [isImage, setIsImage] = useState(false);
+  const [queuePosition, setQueuePosition] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -88,6 +89,7 @@ function UploadPage() {
       });
 
       setTaskId(response.data.taskId);
+      setQueuePosition(response.data.queuePosition || 0);
       setStatus('processing');
       // For images, we might jump to 100% almost instantly, but we wait for the socket event
       setProgress(0);
@@ -131,6 +133,14 @@ function UploadPage() {
                 <p className="text-zinc-400 text-lg">
                   {status === 'uploading' ? 'Securely transferring file to the cloud.' : isImage ? 'AI is processing your image.' : 'AI is processing every frame at native resolution.'}
                 </p>
+                {status === 'processing' && progress === 0 && queuePosition > 0 && !isImage && (
+                  <div className="mt-4 inline-block bg-yellow-500/20 border border-yellow-500/30 rounded-lg px-4 py-2">
+                    <p className="text-yellow-400 font-medium text-sm flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
+                      High Traffic: {queuePosition} {queuePosition === 1 ? 'user is' : 'users are'} ahead of you in the queue.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4 max-w-md mx-auto pt-4 bg-white/5 p-6 rounded-2xl border border-white/5">

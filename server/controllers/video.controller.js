@@ -30,9 +30,12 @@ exports.uploadVideo = async (req, res) => {
       filename: originalname
     });
 
+    const waitingCount = await videoQueue.getWaitingCount();
+
     res.status(201).json({
       message: 'Video uploaded and added to processing queue',
-      taskId: task._id
+      taskId: task._id,
+      queuePosition: waitingCount
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
