@@ -1,18 +1,32 @@
 const axios = require('axios');
 const VideoTask = require('../models/VideoTask');
 
+const { Queue, Worker } = require('bullmq');
+
 let globalIo = null;
+
+const connection = {
+  host: process.env.REDIS_HOST || '127.0.0.1',
+  port: process.env.REDIS_PORT || 6379
+};
+
+const videoQueue = new Queue('video', { connection });
 
 const initWorker = (io) => {
   globalIo = io;
 };
 
-const videoQueue = {
-  add: async (name, jobData) => {
-    // Process asynchronously without BullMQ
-    processJob(jobData).catch(err => console.error("Job failed:", err));
-  }
-};
+// Create a worker with concurrency strictly limited to 1
+const worker = new Worker('video', async job => {
+  await processJob(job.data);
+}, { 
+  connection,
+  concurrency: 1 
+});
+
+worker.on('failed', (job, err) => {
+  console.error(`${job.id} has failed with ${err.message}`);
+});
 
 async function processJob(data) {
   const { taskId, inputPath, filename } = data;
