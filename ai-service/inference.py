@@ -3,23 +3,52 @@ import cv2
 import numpy as np
 import imageio
 import requests
+import boto3
+import uuid
+from dotenv import load_dotenv
 from rembg import remove, new_session
+
+# Load AWS credentials from root .env
+load_dotenv(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.env')))
+
+# Initialize S3 Client
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+    region_name=os.getenv('AWS_REGION', 'ap-south-1')
+)
+BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
+
+def download_from_s3(s3_key):
+    temp_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'outputs'))
+    os.makedirs(temp_dir, exist_ok=True)
+    ext = s3_key.split('.')[-1]
+    local_path = os.path.join(temp_dir, f"temp_in_{uuid.uuid4().hex}.{ext}")
+    print(f"Downloading {s3_key} from S3...")
+    s3_client.download_file(BUCKET_NAME, s3_key, local_path)
+    return local_path
+
+def upload_to_s3(local_path, s3_key, content_type):
+    print(f"Uploading to S3: {s3_key}...")
+    s3_client.upload_file(local_path, BUCKET_NAME, s3_key, ExtraArgs={'ContentType': content_type})
 
 # Create a global session for rembg to avoid reloading the model per frame
 print("Loading AI Model (U-2-Net via rembg)...")
 session = new_session("u2net")
 
-def process_video(input_path, task_id):
-    print(f"Starting video processing for {input_path} with rembg")
+def process_video(s3_key, task_id):
+    print(f"Starting video processing for S3 Key: {s3_key}")
+    
+    # Download from S3
+    local_input = download_from_s3(s3_key)
     
     output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'outputs'))
-    os.makedirs(output_dir, exist_ok=True)
     
     # Use WebM for transparency support
-    output_filename = f"processed_{task_id}.webm"
-    output_path = os.path.join(output_dir, output_filename)
+    local_output = os.path.join(output_dir, f"temp_out_{uuid.uuid4().hex}.webm")
     
-    cap = cv2.VideoCapture(input_path)
+    cap = cv2.VideoCapture(local_input)
     if not cap.isOpened():
         raise Exception("Could not open video file.")
         
@@ -39,7 +68,7 @@ def process_video(input_path, task_id):
     # Use imageio to write transparent WebM video
     # 'libvpx' handles VP8, or 'libvpx-vp9' for VP9. yuva420p format allows alpha channel.
     writer = imageio.get_writer(
-        output_path, 
+        local_output, 
         fps=fps, 
         codec='libvpx-vp9', 
         pixelformat='yuva420p',
@@ -100,7 +129,7 @@ def process_video(input_path, task_id):
     cap.release()
     writer.close()
     
-    print(f"Finished visual processing. Output saved to {output_path}")
+    print(f"Finished visual processing. Saved locally to {local_output}")
     
     # Re-add the original audio track back to the final video using FFmpeg
     try:
@@ -113,52 +142,67 @@ def process_video(input_path, task_id):
         except ImportError:
             ffmpeg_cmd = "ffmpeg"
 
-        final_output_path = output_path.replace(".webm", "_audio.webm")
+        final_local_output = local_output.replace(".webm", "_audio.webm")
         cmd = [
             ffmpeg_cmd, "-y", 
-            "-i", output_path,          # The silent processed WebM
-            "-i", input_path,           # The original MP4/video with audio
-            "-map", "0:v:0",            # Take video track from the WebM
-            "-map", "1:a:0?",           # Take audio track from the original
-            "-c:v", "copy",             # Keep the transparent video exactly as-is
-            "-c:a", "libvorbis",        # Compress audio for WebM compatibility
-            final_output_path
+            "-i", local_output,          # The silent processed WebM
+            "-i", local_input,           # The original MP4/video with audio
+            "-map", "0:v:0",             # Take video track from the WebM
+            "-map", "1:a:0?",            # Take audio track from the original
+            "-c:v", "copy",              # Keep the transparent video exactly as-is
+            "-c:a", "libvorbis",         # Compress audio for WebM compatibility
+            final_local_output
         ]
         print("Muxing audio back into video...")
         result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         
-        if result.returncode == 0 and os.path.exists(final_output_path):
-            os.replace(final_output_path, output_path)
+        if result.returncode == 0 and os.path.exists(final_local_output):
+            os.replace(final_local_output, local_output)
             print("Successfully added audio back.")
         else:
             print("Original video had no audio or muxing failed. Proceeding with silent video.")
     except Exception as e:
         print(f"Failed to add audio: {e}")
 
-    return output_path
+    # Upload final output to S3
+    output_s3_key = f"outputs/{task_id}/processed.webm"
+    upload_to_s3(local_output, output_s3_key, 'video/webm')
+    
+    # Cleanup local temporary files
+    try:
+        os.remove(local_input)
+        os.remove(local_output)
+        print("Cleaned up local temporary files.")
+    except Exception as e:
+        print(f"Warning: Could not cleanup local files: {e}")
 
-def process_image(input_path, task_id):
-    print(f"Starting image processing for {input_path} with rembg")
+    return output_s3_key
+
+def process_image(s3_key, task_id):
+    print(f"Starting image processing for S3 Key: {s3_key}")
     
+    local_input = download_from_s3(s3_key)
     output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'outputs'))
-    os.makedirs(output_dir, exist_ok=True)
+    local_output = os.path.join(output_dir, f"temp_out_{uuid.uuid4().hex}.png")
     
-    output_filename = f"processed_{task_id}.png"
-    output_path = os.path.join(output_dir, output_filename)
-    
-    # Read the image using cv2 (supports jpg, png, webp, bmp, tiff, etc.)
-    img = cv2.imread(input_path)
+    # Read the image using cv2
+    img = cv2.imread(local_input)
     if img is None:
-        raise Exception(f"Could not open image file: {input_path}")
+        raise Exception(f"Could not open image file from S3: {s3_key}")
         
     try:
-        # rembg remove() handles BGR numpy arrays perfectly
         output = remove(img, session=session)
+        cv2.imwrite(local_output, output)
         
-        # Save the RGBA output to PNG
-        cv2.imwrite(output_path, output)
-        print(f"Finished visual processing. Output saved to {output_path}")
-        return output_path
+        # Upload to S3
+        output_s3_key = f"outputs/{task_id}/processed.png"
+        upload_to_s3(local_output, output_s3_key, 'image/png')
+        
+        # Cleanup
+        os.remove(local_input)
+        os.remove(local_output)
+        
+        return output_s3_key
     except Exception as e:
         print(f"Error processing image: {e}")
         raise e

@@ -7,3 +7,4 @@ python-dotenv
 rembg[cpu]
 imageio
 imageio-ffmpeg
+boto3

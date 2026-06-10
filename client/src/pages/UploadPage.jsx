@@ -75,18 +75,31 @@ function UploadPage() {
     try {
       const headers = user?.token ? { Authorization: `Bearer ${user.token}` } : {};
       
-      const endpoint = imageCheck ? '/api/video/upload-image' : '/api/video/upload';
+      // 1. Get Presigned URL from Backend
+      const urlResponse = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/video/upload-url`, {
+        params: { fileType: selectedFile.type, isImage: imageCheck },
+        headers
+      });
+      const { uploadUrl, key } = urlResponse.data;
 
-      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${endpoint}`, formData, {
+      // 2. Upload Directly to AWS S3
+      await axios.put(uploadUrl, selectedFile, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          ...headers
+          'Content-Type': selectedFile.type
         },
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setProgress(percentCompleted);
         }
       });
+
+      // 3. Notify Backend that upload is complete
+      const endpoint = imageCheck ? '/api/video/upload-image' : '/api/video/upload';
+
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${endpoint}`, {
+        originalname: selectedFile.name,
+        s3Key: key
+      }, { headers });
 
       setTaskId(response.data.taskId);
       setQueuePosition(response.data.queuePosition || 0);
