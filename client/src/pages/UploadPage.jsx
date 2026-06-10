@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle2, Loader2, Download, Image as ImageIcon, Video } from 'lucide-react';
+import { CheckCircle2, Loader2, Download, RefreshCw, Zap, Sparkles } from 'lucide-react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import { Card, CardContent } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Progress } from '../components/ui/progress';
 import { FileUpload } from '../components/ui/file-upload';
 
 function UploadPage() {
@@ -114,98 +111,141 @@ function UploadPage() {
   };
 
   return (
-    <div className="relative min-h-[85vh] flex flex-col items-center justify-center w-full px-4 py-12 bg-black">
-      <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_800px_800px_at_50%_-20%,rgba(168,85,247,0.15),transparent)] pointer-events-none"></div>
+    <div className="relative min-h-[calc(100vh-64px)] flex flex-col items-center justify-center w-full px-4 py-24 bg-[var(--color-cream-paper)] overflow-hidden">
       
-      <div className="z-10 text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4">Upload your media</h2>
-        <p className="text-zinc-400 text-lg">Supported: Videos (MP4, MOV, WebM) & Images (PNG, JPG, WebP)</p>
+      {/* Background Dots */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-[0.3]"
+        style={{
+          backgroundImage: `radial-gradient(var(--color-pencil-gray) 1px, transparent 1px)`,
+          backgroundSize: '24px 24px'
+        }}
+      ></div>
+
+      <div className="z-10 text-center mb-16 relative">
+        <div className="absolute -top-10 -left-12 opacity-50 transform -rotate-12">
+          <Sparkles className="w-8 h-8 text-[var(--color-terracotta)]" />
+        </div>
+        <h2 className="font-display text-[55px] text-[var(--color-forest-ink)] mb-4 leading-none">
+          Upload media
+        </h2>
+        <p className="text-[18px] text-[var(--color-forest-ink)] opacity-80 max-w-[600px] mx-auto font-medium">
+          Drop your raw files. We'll handle the rotoscoping.
+        </p>
       </div>
 
-      <Card className="z-10 w-full max-w-3xl bg-white/5 backdrop-blur-xl border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-700 delay-150 fill-mode-both overflow-hidden">
-        <CardContent className="p-8 md:p-12">
+      {/* Main Upload Box (Sketchbook Style) */}
+      <div className="relative z-20 w-full max-w-2xl">
+        {/* Taped top edge */}
+        <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-32 h-8 bg-white/50 backdrop-blur-sm border border-[var(--color-pencil-gray)]/50 shadow-sm z-30 transform -rotate-2 mix-blend-multiply"></div>
+        <div className="absolute -bottom-4 right-10 w-24 h-8 bg-white/50 backdrop-blur-sm border border-[var(--color-pencil-gray)]/50 shadow-sm z-30 transform rotate-3 mix-blend-multiply"></div>
+
+        <div className="bg-[var(--color-cream-paper)] border border-[var(--color-pencil-gray)] rounded-[4px] p-8 md:p-12 shadow-[var(--shadow-subtle-2)] relative">
+          
           {status === 'idle' && (
-            <div className="animate-in fade-in zoom-in duration-500">
-              <FileUpload onChange={handleFileUpload} />
-            </div>
+            <FileUpload onChange={handleFileUpload} />
           )}
 
           {(status === 'uploading' || status === 'processing') && (
-            <div className="text-center py-16 space-y-12 animate-in fade-in duration-500">
+            <div className="text-center py-10 space-y-8">
               <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
-                <div className="absolute inset-0 bg-purple-500/20 rounded-full animate-ping opacity-75 duration-1000"></div>
-                <div className="relative z-10 w-24 h-24 bg-black border border-purple-500/50 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.4)]">
-                  <Loader2 className="w-10 h-10 text-purple-400 animate-spin" />
+                <div className="absolute inset-0 bg-[var(--color-highlighter-yellow)] rounded-full animate-ping opacity-50"></div>
+                <div className="relative z-10 w-24 h-24 bg-[var(--color-highlighter-yellow)] border-2 border-[var(--color-forest-ink)] rounded-full flex items-center justify-center shadow-sm">
+                  <Loader2 className="w-10 h-10 text-[var(--color-forest-ink)] animate-spin" />
                 </div>
               </div>
               
               <div>
-                <h3 className="text-3xl font-bold text-white mb-3 tracking-tight">
-                  {status === 'uploading' ? 'Uploading...' : 'Extracting Background...'}
+                <h3 className="font-display text-[32px] text-[var(--color-forest-ink)] mb-2">
+                  {status === 'uploading' ? 'Uploading securely...' : 'Extracting Background...'}
                 </h3>
-                <p className="text-zinc-400 text-lg">
-                  {status === 'uploading' ? 'Securely transferring file to the cloud.' : isImage ? 'AI is processing your image.' : 'AI is processing every frame at native resolution.'}
+                <p className="text-[16px] text-[var(--color-forest-ink)] opacity-80 font-mono">
+                  {status === 'uploading' ? 'Sending directly to AWS S3.' : isImage ? 'AI is segmenting your image.' : 'AI is processing every frame at native resolution.'}
                 </p>
                 {status === 'processing' && progress === 0 && queuePosition > 0 && !isImage && (
-                  <div className="mt-4 inline-block bg-yellow-500/20 border border-yellow-500/30 rounded-lg px-4 py-2">
-                    <p className="text-yellow-400 font-medium text-sm flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></span>
-                      High Traffic: {queuePosition} {queuePosition === 1 ? 'user is' : 'users are'} ahead of you in the queue.
+                  <div className="mt-6 inline-flex bg-[var(--color-sticky-note-mint)] border border-[var(--color-forest-ink)] rounded-[4px] px-5 py-2">
+                    <p className="text-[12px] text-[var(--color-forest-ink)] font-mono font-bold flex items-center gap-2 tracking-wide uppercase">
+                      <span className="w-2 h-2 rounded-full bg-[var(--color-forest-ink)] animate-pulse"></span>
+                      Queue: {queuePosition} {queuePosition === 1 ? 'user is' : 'users are'} ahead of you.
                     </p>
                   </div>
                 )}
               </div>
 
-              <div className="space-y-4 max-w-md mx-auto pt-4 bg-white/5 p-6 rounded-2xl border border-white/5">
-                <div className="flex justify-between text-sm font-medium">
-                  <span className="text-zinc-400">{status === 'uploading' ? 'Upload Progress' : 'AI Processing'}</span>
-                  <span className="text-purple-400 font-bold text-lg">{progress}%</span>
+              <div className="max-w-md mx-auto pt-4 relative">
+                {/* Hand-drawn progress bar border */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none -m-1" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <rect x="0" y="0" width="100" height="100" rx="4" fill="none" stroke="var(--color-forest-ink)" strokeWidth="0.5" strokeDasharray="4 2" />
+                </svg>
+
+                <div className="flex justify-between text-[12px] font-mono font-bold tracking-wide uppercase mb-3 relative z-10">
+                  <span className="text-[var(--color-forest-ink)] opacity-70">{status === 'uploading' ? 'Upload Progress' : 'AI Processing'}</span>
+                  <span className="text-[var(--color-forest-ink)]">{progress}%</span>
                 </div>
-                <Progress value={progress} className="h-3 bg-white/10" />
+                <div className="h-4 bg-transparent border border-[var(--color-pencil-gray)] rounded-[2px] overflow-hidden relative z-10 p-0.5">
+                  <div 
+                    className="h-full bg-[var(--color-terracotta)] transition-all duration-300 ease-out rounded-[1px]"
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
               </div>
             </div>
           )}
 
           {status === 'completed' && (
-            <div className="text-center py-16 space-y-10 animate-in fade-in zoom-in-95 duration-500">
-              <div className="w-32 h-32 bg-green-500/10 border border-green-500/30 rounded-full flex items-center justify-center mx-auto shadow-[0_0_50px_rgba(34,197,94,0.2)] relative">
-                <div className="absolute inset-0 border-2 border-green-500/50 rounded-full animate-ping opacity-50"></div>
-                <CheckCircle2 className="w-16 h-16 text-green-400 relative z-10" />
+            <div className="text-center py-10 space-y-10 relative">
+              
+              {/* Confetti Skecth SVG */}
+              <svg className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 pointer-events-none opacity-20" viewBox="0 0 100 100">
+                <path d="M 10 10 L 20 20 M 90 10 L 80 20 M 10 90 L 20 80 M 90 90 L 80 80 M 50 5 L 50 15 M 5 50 L 15 50 M 95 50 L 85 50 M 50 95 L 50 85" stroke="var(--color-forest-ink)" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+
+              <div className="relative z-10 w-32 h-32 bg-[var(--color-sticky-note-mint)] border-2 border-[var(--color-forest-ink)] rounded-full flex items-center justify-center mx-auto shadow-[4px_4px_0px_0px_var(--color-forest-ink)] transform -rotate-3">
+                <CheckCircle2 className="w-14 h-14 text-[var(--color-forest-ink)]" />
               </div>
-              <div>
-                <h3 className="text-4xl font-extrabold text-white mb-4 tracking-tight">Success!</h3>
-                <p className="text-zinc-400 text-lg">Your perfectly transparent {isImage ? 'PNG image' : 'WebM video'} is ready.</p>
+              
+              <div className="relative z-10">
+                <h3 className="font-display text-[48px] text-[var(--color-forest-ink)] mb-4">Success!</h3>
+                <p className="text-[16px] text-[var(--color-forest-ink)] font-mono opacity-80">Your perfectly transparent {isImage ? 'PNG image' : 'WebM video'} is ready.</p>
               </div>
-              <div className="flex flex-col sm:flex-row justify-center gap-4 pt-8">
-                <Button variant="outline" size="lg" onClick={() => { setStatus('idle'); setFile(null); }} className="border-white/10 hover:bg-white/5 text-white h-14 px-8 text-lg rounded-xl">
+              
+              <div className="relative z-10 flex flex-col sm:flex-row justify-center items-center gap-4 pt-6">
+                <button 
+                  onClick={() => { setStatus('idle'); setFile(null); }} 
+                  className="w-full sm:w-auto py-[12px] px-6 bg-transparent border border-[var(--color-forest-ink)] text-[var(--color-forest-ink)] hover:bg-[var(--color-forest-ink)] hover:text-[var(--color-cream-paper)] font-medium text-[15px] rounded-[4px] transition-colors flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
                   Upload Another
-                </Button>
-                <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/video/${isImage ? 'download-image' : 'download'}/${taskId}`} download>
-                  <Button size="lg" className="bg-white text-black hover:bg-zinc-200 h-14 px-8 text-lg font-semibold rounded-xl shadow-[0_0_30px_rgba(255,255,255,0.2)] gap-2 group">
-                    <Download className="w-6 h-6 group-hover:-translate-y-1 transition-transform" /> 
-                    Download {isImage ? 'Image' : 'Video'}
-                  </Button>
+                </button>
+                <a href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/video/${isImage ? 'download-image' : 'download'}/${taskId}`} download className="w-full sm:w-auto">
+                  <button className="w-full py-[12px] px-6 bg-[#8a9c7b] hover:bg-[#7b8e6c] text-[var(--color-cream-paper)] border border-[var(--color-forest-ink)] font-medium text-[15px] rounded-[4px] transition-colors flex items-center justify-center gap-2 shadow-[2px_2px_0px_0px_var(--color-forest-ink)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]">
+                    <Download className="w-5 h-5" /> 
+                    <span>Download {isImage ? 'Image' : 'Video'}</span>
+                  </button>
                 </a>
               </div>
             </div>
           )}
 
           {status === 'error' && (
-            <div className="text-center py-16 space-y-8 animate-in fade-in duration-500">
-              <div className="w-28 h-28 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(239,68,68,0.2)]">
-                <span className="text-red-400 text-6xl font-bold">!</span>
+            <div className="text-center py-10 space-y-8">
+              <div className="w-32 h-32 bg-[var(--color-terracotta)] border-2 border-[var(--color-forest-ink)] rounded-full flex items-center justify-center mx-auto shadow-[4px_4px_0px_0px_var(--color-forest-ink)] transform rotate-6">
+                <Zap className="w-14 h-14 text-[var(--color-cream-paper)]" />
               </div>
               <div>
-                <h3 className="text-3xl font-bold text-red-400 mb-3 tracking-tight">Processing Failed</h3>
-                <p className="text-zinc-400 text-lg">{errorMsg}</p>
+                <h3 className="font-display text-[40px] text-[var(--color-forest-ink)] mb-4">Processing Failed</h3>
+                <p className="text-[16px] text-[var(--color-forest-ink)] font-mono opacity-80">{errorMsg}</p>
               </div>
-              <Button variant="outline" size="lg" onClick={() => { setStatus('idle'); setFile(null); }} className="mt-8 border-white/10 text-white hover:bg-white/5 h-12 px-8 rounded-xl">
+              <button 
+                onClick={() => { setStatus('idle'); setFile(null); }} 
+                className="py-[12px] px-8 bg-transparent border border-[var(--color-forest-ink)] text-[var(--color-forest-ink)] hover:bg-[var(--color-forest-ink)] hover:text-[var(--color-cream-paper)] font-medium text-[15px] rounded-[4px] transition-colors mt-4"
+              >
                 Try Again
-              </Button>
+              </button>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

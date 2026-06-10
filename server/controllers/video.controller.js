@@ -238,3 +238,55 @@ exports.downloadImage = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+/**
+ * POST /api/video/batch-complete
+ * 
+ * Called by the Fargate container (job.py) when it finishes processing.
+ * Updates the MongoDB task and emits a Socket.io event to the waiting frontend.
+ * 
+ * Secured by a shared secret: the Fargate container sends X-Batch-Secret header
+ * which must match the BATCH_CALLBACK_SECRET env var.
+ */
+exports.batchComplete = async (req, res) => {
+  try {
+    // Verify the shared secret to ensure this request comes from our Fargate container
+    const secret = req.headers['x-batch-secret'];
+    if (process.env.BATCH_CALLBACK_SECRET && secret !== process.env.BATCH_CALLBACK_SECRET) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const { taskId, status, outputPath, errorMessage } = req.body;
+
+    if (!taskId || !status) {
+      return res.status(400).json({ message: 'taskId and status are required' });
+    }
+
+    console.log(`[Batch Callback] Task ${taskId} → ${status}`);
+
+    const update = {
+      status,
+      completedAt: status === 'completed' ? Date.now() : undefined,
+      ...(outputPath && { outputPath }),
+      ...(errorMessage && { errorMessage }),
+      ...(status === 'completed' && { progress: 100 }),
+    };
+
+    await VideoTask.findByIdAndUpdate(taskId, update);
+
+    // Emit real-time event to the frontend
+    if (req.io) {
+      req.io.to(taskId.toString()).emit('status_update', {
+        status,
+        progress: status === 'completed' ? 100 : undefined,
+        outputPath: outputPath || undefined,
+        errorMessage: errorMessage || undefined
+      });
+    }
+
+    res.status(200).json({ message: 'Task updated successfully' });
+  } catch (error) {
+    console.error('[Batch Callback] Error:', error.message);
+    res.status(500).json({ message: error.message });
+  }
+};

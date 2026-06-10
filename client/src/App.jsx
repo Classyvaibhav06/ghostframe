@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import LandingPage from './pages/LandingPage';
 import UploadPage from './pages/UploadPage';
 import ApiPage from './pages/ApiPage';
@@ -15,9 +16,9 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen flex flex-col selection:bg-purple-500/30">
+        <div className="min-h-screen flex flex-col font-sans">
           <Navbar />
-          <main className="flex-grow w-full pt-16 bg-[#0a0a0a]">
+          <main className="flex-grow w-full pt-20">
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/signin" element={<SignInPage />} />
@@ -30,6 +31,7 @@ function App() {
               <Route path="/how-it-works" element={<HowItWorksPage />} />
             </Routes>
           </main>
+          <Footer />
         </div>
       </Router>
     </AuthProvider>

@@ -5,11 +5,10 @@ import imageio
 import requests
 import boto3
 import uuid
-from dotenv import load_dotenv
 from rembg import remove, new_session
 
-# Load AWS credentials from root .env
-load_dotenv(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.env')))
+# NOTE: In Docker/Fargate, env vars are injected by AWS Batch — no .env file needed.
+# For local development, set env vars manually or use a .env loader in your shell.
 
 # Initialize S3 Client
 s3_client = boto3.client(
@@ -89,13 +88,16 @@ def process_video(s3_key, task_id):
                 if total_frames > 0:
                     # max 99 so it doesn't say 100% until fully saved
                     progress = min(99, int((frame_count / total_frames) * 100))
-                    try:
-                        requests.post('http://localhost:5000/api/video/progress', json={
-                            "taskId": task_id,
-                            "progress": progress
-                        }, timeout=2)
-                    except Exception as e:
-                        print(f"Could not send progress: {e}")
+                    # NODE_API_URL is injected by AWS Batch (e.g. http://65.0.109.199:5000)
+                    node_api_url = os.getenv('NODE_API_URL', '').strip()
+                    if node_api_url:
+                        try:
+                            requests.post(f'{node_api_url}/api/video/progress', json={
+                                "taskId": task_id,
+                                "progress": progress
+                            }, timeout=2)
+                        except Exception as e:
+                            print(f"Could not send progress: {e}")
                 
             # Resize for processing
             small_frame = cv2.resize(frame, (p_width, p_height))

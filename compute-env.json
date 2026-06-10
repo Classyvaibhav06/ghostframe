@@ -1,0 +1,12 @@
+{
+  "type": "FARGATE",
+  "maxvCpus": 256,
+  "subnets": [
+    "subnet-01febf49a927b514e",
+    "subnet-0b23ec8e963f30a73",
+    "subnet-0642ce7f860367edd"
+  ],
+  "securityGroupIds": [
+    "sg-0bcadea1eabe1013b"
+  ]
+}
