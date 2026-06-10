@@ -46,7 +46,8 @@ async function submitVideoToBatch(taskId, inputPath) {
         { name: 'TASK_ID', value: taskId.toString() },
         { name: 'S3_INPUT_KEY', value: inputPath },
         { name: 'MEDIA_TYPE', value: 'video' },
-        { name: 'NODE_API_URL', value: nodeApiUrl }
+        { name: 'NODE_API_URL', value: nodeApiUrl },
+        { name: 'S3_BUCKET_NAME', value: process.env.S3_BUCKET_NAME }
       ]
     }
   });
