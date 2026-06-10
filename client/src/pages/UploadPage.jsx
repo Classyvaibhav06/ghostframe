@@ -29,6 +29,7 @@ function UploadPage() {
   const [queuePosition, setQueuePosition] = useState(0);
   const [stepIndex, setStepIndex] = useState(0);
   const stepTimer = useRef(null);
+  const fakeProgressTimer = useRef(null);
 
   // Cycle through assigning steps during Fargate cold start
   useEffect(() => {
@@ -41,6 +42,23 @@ function UploadPage() {
       clearInterval(stepTimer.current);
     }
     return () => clearInterval(stepTimer.current);
+  }, [status]);
+
+  // Animate fake progress 0→90% so bar always moves during processing.
+  // Real webhook progress from Fargate overrides this when it arrives.
+  useEffect(() => {
+    if (status === 'processing') {
+      fakeProgressTimer.current = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) { clearInterval(fakeProgressTimer.current); return prev; }
+          const increment = prev < 30 ? 1.5 : prev < 60 ? 0.8 : 0.3;
+          return Math.min(90, parseFloat((prev + increment).toFixed(1)));
+        });
+      }, 3000);
+    } else {
+      clearInterval(fakeProgressTimer.current);
+    }
+    return () => clearInterval(fakeProgressTimer.current);
   }, [status]);
 
   useEffect(() => {
@@ -59,7 +77,8 @@ function UploadPage() {
       socket.on('status_update', (data) => {
         if (data.status === 'processing') {
           setStatus('processing');
-          setProgress(data.progress || 0);
+          // Only use real progress if it's higher than current (don't go backwards)
+          setProgress(prev => Math.max(prev, data.progress || 0));
         } else if (data.status === 'completed') {
           setStatus('completed');
           setProgress(100);
