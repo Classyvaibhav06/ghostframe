@@ -33,8 +33,9 @@ def upload_to_s3(local_path, s3_key, content_type):
     s3_client.upload_file(local_path, BUCKET_NAME, s3_key, ExtraArgs={'ContentType': content_type})
 
 # Create a global session for rembg to avoid reloading the model per frame
-print("Loading AI Model (U-2-Net via rembg)...")
-session = new_session("u2net")
+# u2netp is ~3x faster than u2net with ~90% of the quality — ideal for CPU/Fargate
+print("Loading AI Model (U-2-Net-P via rembg)...")
+session = new_session("u2netp")
 
 def process_video(s3_key, task_id):
     print(f"Starting video processing for S3 Key: {s3_key}")
@@ -58,9 +59,9 @@ def process_video(s3_key, task_id):
     if fps == 0 or np.isnan(fps):
         fps = 30.0
         
-    # Process at full native resolution to maximize quality
-    # This will use much more compute power on the PC
-    process_scale = 1.0 
+    # Process at half resolution — 4x fewer pixels for AI, then upscale back.
+    # Gives ~4x speed boost with minimal visible quality difference.
+    process_scale = 0.5
     p_width = int(width * process_scale)
     p_height = int(height * process_scale)
     
@@ -75,13 +76,21 @@ def process_video(s3_key, task_id):
     )
     
     frame_count = 0
+    prev_rgba = None  # Cache last processed frame for frame-skipping
     try:
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
-                
+
             frame_count += 1
+
+            # Skip every 2nd frame — reuse previous AI result for ~2x speed boost.
+            # Motion between adjacent frames is minimal at normal frame rates.
+            if frame_count % 2 == 0 and prev_rgba is not None:
+                writer.append_data(prev_rgba)
+                continue
+
             if frame_count % 30 == 0:
                 print(f"Processed {frame_count}/{total_frames} frames...", flush=True)
                 # Send progress to Node.js server webhook
@@ -119,7 +128,8 @@ def process_video(s3_key, task_id):
             
             # Stack into a final RGBA image
             rgba_frame = np.dstack((rgb_fg, alpha_resized))
-            
+            prev_rgba = rgba_frame  # Cache for frame-skipping
+
             writer.append_data(rgba_frame)
             
     except Exception as e:
