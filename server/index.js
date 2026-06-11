@@ -51,6 +51,7 @@ initWorker(io);
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/video', require('./routes/video.routes'));
+app.use('/api/developer', require('./routes/api.routes'));
 
 const PORT = process.env.PORT || 5000;
 

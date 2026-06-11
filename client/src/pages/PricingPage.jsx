@@ -81,6 +81,10 @@ export default function PricingPage() {
               <Sparkles className="w-4 h-4 mt-0.5 text-[var(--color-pencil-gray)] shrink-0" />
               <span>1080p resolution exports</span>
             </li>
+            <li className="flex items-start gap-3">
+              <Sparkles className="w-4 h-4 mt-0.5 text-[var(--color-pencil-gray)] shrink-0" />
+              <span className="font-bold">API access — 4 videos + 20 images/mo</span>
+            </li>
           </ul>
           
           <button className="w-full py-[14px] px-8 bg-transparent border border-[var(--color-forest-ink)] text-[var(--color-forest-ink)] hover:bg-[var(--color-forest-ink)] hover:text-[var(--color-cream-paper)] font-medium text-[16px] rounded-[6px] transition-colors flex items-center justify-center gap-2">
@@ -104,7 +108,7 @@ export default function PricingPage() {
           <h3 className="text-[12px] font-mono font-bold tracking-widest text-[var(--color-forest-ink)] opacity-70 uppercase mb-4">Pro</h3>
           
           <div className="flex items-end gap-2 mb-12 relative z-10">
-            <span className="font-display text-[66px] font-extrabold text-[var(--color-forest-ink)] leading-[0.8]">$5</span>
+            <span className="font-display text-[66px] font-extrabold text-[var(--color-forest-ink)] leading-[0.8]">$1</span>
             <span className="text-[12px] font-mono tracking-widest text-[var(--color-forest-ink)] opacity-70 uppercase pb-1">/Month</span>
           </div>
           
@@ -125,6 +129,10 @@ export default function PricingPage() {
             <li className="flex items-start gap-3">
               <Sparkles className="w-4 h-4 mt-0.5 text-[var(--color-forest-ink)] shrink-0" />
               <span>4K resolution exports</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Sparkles className="w-4 h-4 mt-0.5 text-[var(--color-forest-ink)] shrink-0" />
+              <span>API access — 200 videos + 200 images/mo</span>
             </li>
           </ul>
 
