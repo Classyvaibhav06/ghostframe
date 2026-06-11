@@ -18,7 +18,12 @@ const generateKey = async (req, res) => {
 // Revokes (deletes) the user's current API key
 const revokeKey = async (req, res) => {
   try {
-    await User.findByIdAndUpdate(req.user._id, { apiKey: null, apiCallsThisMonth: 0 });
+    // Use $unset to remove the field entirely — setting to null would re-trigger
+    // the sparse unique index collision for multiple users with null keys.
+    await User.findByIdAndUpdate(req.user._id, {
+      $unset: { apiKey: '' },
+      $set:   { apiVideoCallsThisMonth: 0, apiImageCallsThisMonth: 0 },
+    });
     res.json({ message: 'API key revoked' });
   } catch (err) {
     console.error('[API] revokeKey error:', err);

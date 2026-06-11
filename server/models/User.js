@@ -30,7 +30,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true,
-    default: null,
+    // NO default — field must be absent (not null) for sparse index to skip it.
+    // generateApiKey() sets this when the user requests a key.
   },
   // Separate monthly counters — lets us enforce per-type plan limits
   apiVideoCallsThisMonth: {
