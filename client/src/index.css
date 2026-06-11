@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+:root {
+  --ease-premium: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+}
+
 @theme {
   /* Colors */
   --color-forest-ink: #1a3300;
@@ -62,10 +69,23 @@
   --radius-2xl: 16px;
   --radius-full: 9999px;
 
-  /* Shadows */
+  /* Shadows — soft, layered, low-alpha for a premium feel */
   --shadow-subtle: rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
   --shadow-subtle-2: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px;
+  --shadow-lift:
+    rgba(26, 51, 0, 0.04) 0px 2px 4px,
+    rgba(26, 51, 0, 0.06) 0px 8px 16px -4px;
   --shadow-xl: rgba(255, 235, 90, 0.01) 0px 527px 211px 0px, rgba(255, 235, 90, 0.05) 0px 297px 178px 0px, rgba(255, 235, 90, 0.09) 0px 132px 132px 0px, rgba(255, 235, 90, 0.1) 0px 33px 72px 0px;
+
+  /* Motion — single source of truth for all animations */
+  --ease-premium: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -76,9 +96,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+button,
+a,
+[role="button"],
+input[type="button"],
+input[type="submit"] {
+  cursor: pointer;
+}
+
 ::selection {
   background-color: var(--color-highlighter-yellow);
   color: var(--color-forest-ink);
+}
+
+/* Consistent, accessible focus ring */
+:focus-visible {
+  outline: 2px solid var(--color-forest-ink);
+  outline-offset: 3px;
+  border-radius: var(--radius-md);
 }
 
 /* Custom Typography Utilities */
@@ -95,6 +130,19 @@ body {
   border-radius: 2px;
 }
 
+/* Animated underline for inline links — draws in on hover */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1.5px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size var(--duration-base) var(--ease-premium);
+}
+
+.link-underline:hover {
+  background-size: 100% 1.5px;
+}
+
 /* Base Components */
 .btn-primary {
   background-color: var(--color-forest-ink);
@@ -103,17 +151,38 @@ body {
   padding: 12px 24px;
   font-weight: 500;
   font-size: 16px;
-  transition: all 0.2s ease;
-  box-shadow: rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-shadow: var(--shadow-subtle);
+  transition:
+    transform var(--duration-fast) var(--ease-premium),
+    box-shadow var(--duration-base) var(--ease-premium),
+    background-color var(--duration-fast) ease;
+  will-change: transform;
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px;
+  box-shadow: var(--shadow-lift);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: var(--shadow-subtle);
+  transition-duration: 80ms;
+}
+
+/* Arrow nudge: wrap trailing arrows in a span inside the button */
+.btn-primary span,
+.btn-primary svg {
+  transition: transform var(--duration-base) var(--ease-premium);
+}
+
+.btn-primary:hover span,
+.btn-primary:hover svg {
+  transform: translateX(2px);
 }
 
 .btn-outline {
@@ -124,16 +193,111 @@ body {
   padding: 8px 16px;
   font-weight: 500;
   font-size: 14px;
-  transition: all 0.2s ease;
+  transition:
+    background-color var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-premium),
+    box-shadow var(--duration-base) var(--ease-premium);
 }
 
 .btn-outline:hover {
   background-color: rgba(26, 51, 0, 0.05);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-subtle);
+}
+
+.btn-outline:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 80ms;
 }
 
 .sticky-card {
   border-radius: 12px;
   padding: 24px;
-  /* No shadow, relies on color fill */
   border: 1px solid transparent;
+  transition: border-color var(--duration-base) ease;
+}
+
+.stamp-seal {
+  transition:
+    transform var(--duration-slow) var(--ease-premium),
+    background-color var(--duration-base) ease,
+    box-shadow var(--duration-base) ease,
+    translate var(--duration-slow) var(--ease-premium);
+}
+
+/* Card icon: gentle scale, driven by parent hover (works with `group` class) */
+.sticky-card .card-icon {
+  transition: transform var(--duration-slow) var(--ease-premium);
+}
+
+.sticky-card:hover .card-icon {
+  transform: scale(1.06);
+}
+
+/* The transparency checkerboard — the product's whole point, as a pattern */
+.bg-checkerboard {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, rgba(26, 51, 0, 0.08) 25%, transparent 25%, transparent 75%, rgba(26, 51, 0, 0.08) 75%),
+    linear-gradient(45deg, rgba(26, 51, 0, 0.08) 25%, transparent 25%, transparent 75%, rgba(26, 51, 0, 0.08) 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+}
+
+/* Entrance utility for non-framer elements */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up var(--duration-slow) var(--ease-premium) both;
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Diagonal stripes drifting across the fill — signals "alive" even when % stalls */
+@keyframes progress-stripes {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 24px 0;
+  }
+}
+
+.progress-stripes {
+  background-image: linear-gradient(45deg,
+      rgba(255, 255, 255, 0.18) 25%, transparent 25%,
+      transparent 50%, rgba(255, 255, 255, 0.18) 50%,
+      rgba(255, 255, 255, 0.18) 75%, transparent 75%);
+  background-size: 24px 24px;
+  animation: progress-stripes 0.9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-stripes {
+    animation: none;
+  }
 }
