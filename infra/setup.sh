@@ -183,8 +183,8 @@ aws batch register-job-definition \
   --container-properties "{
     \"image\": \"$ECR_URI:latest\",
     \"resourceRequirements\": [
-      {\"type\": \"VCPU\", \"value\": \"4\"},
-      {\"type\": \"MEMORY\", \"value\": \"8192\"}
+      {\"type\": \"VCPU\", \"value\": \"8\"},
+      {\"type\": \"MEMORY\", \"value\": \"16384\"}
     ],
     \"executionRoleArn\": \"$ROLE_ARN\",
     \"jobRoleArn\": \"$ROLE_ARN\",

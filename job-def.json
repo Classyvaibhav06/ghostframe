@@ -1,8 +1,8 @@
 {
   "image": "506953261837.dkr.ecr.ap-south-1.amazonaws.com/ghostframe-ai:latest",
   "resourceRequirements": [
-    {"type": "VCPU", "value": "4"},
-    {"type": "MEMORY", "value": "8192"}
+    {"type": "VCPU", "value": "8"},
+    {"type": "MEMORY", "value": "16384"}
   ],
   "executionRoleArn": "arn:aws:iam::506953261837:role/GhostFrameBatchExecutionRole",
   "jobRoleArn": "arn:aws:iam::506953261837:role/GhostFrameBatchExecutionRole",
