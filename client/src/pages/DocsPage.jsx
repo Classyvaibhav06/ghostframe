@@ -78,7 +78,7 @@ export default function DocsPage() {
                       <div className="absolute bottom-1 left-0 w-full h-3 bg-[var(--color-highlighter-yellow)] -z-10 transform -rotate-1"></div>
                     </h1>
                     <p className="text-[18px] text-[var(--color-forest-ink)] opacity-80 font-medium leading-relaxed max-w-3xl mt-4">
-                      Integrate GhostFrame's ultra-fast AI background removal directly into your application using our REST API. You can process videos programmatically with just a few lines of code.
+                      Integrate GhostFrame's ultra-fast AI background removal directly into your application using our REST API. You can process images and videos programmatically.
                     </p>
                   </div>
                   
@@ -88,46 +88,31 @@ export default function DocsPage() {
                   </svg>
 
                   <div className="space-y-4">
-                    <h3 className="font-display text-[28px] text-[var(--color-forest-ink)]">1. Install the SDK</h3>
-                    <p className="text-[16px] text-[var(--color-forest-ink)] opacity-80">Currently, we support Node.js officially. For other languages, use standard HTTP requests.</p>
+                    <h3 className="font-display text-[28px] text-[var(--color-forest-ink)]">1. Get an Upload URL</h3>
+                    <p className="text-[16px] text-[var(--color-forest-ink)] opacity-80">Request a pre-signed S3 URL to upload your raw media directly to our storage. This ensures fast uploads without hitting our API limits.</p>
                     
                     <div className="relative group">
-                      <div className="relative bg-[#faf8f5] border-2 border-[var(--color-forest-ink)] rounded-[4px] p-4 flex items-center justify-between">
-                        <code className="text-[15px] font-mono font-bold text-[#8a9c7b]">npm install @ghostframe/node</code>
-                        <button 
-                          onClick={() => copyCode('npm install @ghostframe/node')}
-                          className="text-[var(--color-pencil-gray)] hover:text-[var(--color-forest-ink)] transition-colors"
-                        >
-                          {copied ? <CheckCircle2 className="w-5 h-5 text-[var(--color-sticky-note-mint)]" /> : <Copy className="w-5 h-5" />}
-                        </button>
+                      <div className="relative bg-[#faf8f5] border-2 border-[var(--color-forest-ink)] rounded-[4px] p-4 flex items-center justify-between overflow-x-auto">
+                        <code className="text-[15px] font-mono font-bold text-[#8a9c7b] whitespace-nowrap">GET /api/video/upload-url?fileType=video/mp4&isImage=false</code>
                       </div>
                     </div>
                   </div>
 
                   <div className="space-y-4 pt-4">
-                    <h3 className="font-display text-[28px] text-[var(--color-forest-ink)]">2. Process a Video</h3>
-                    <p className="text-[16px] text-[var(--color-forest-ink)] opacity-80">Initialize the client with your API key and send a video file for processing.</p>
+                    <h3 className="font-display text-[28px] text-[var(--color-forest-ink)]">2. Submit for Processing</h3>
+                    <p className="text-[16px] text-[var(--color-forest-ink)] opacity-80">After uploading to S3, submit the file key to start the background removal AI job.</p>
                     
                     <div className="bg-white border-2 border-[var(--color-forest-ink)] rounded-[4px] overflow-hidden">
                       <div className="bg-[var(--color-whisper-gray)] px-4 py-2 border-b-2 border-[var(--color-forest-ink)] flex items-center gap-2">
-                        <div className="flex gap-1.5">
-                          <div className="w-3 h-3 rounded-full border border-[var(--color-forest-ink)] bg-[var(--color-terracotta)]"></div>
-                          <div className="w-3 h-3 rounded-full border border-[var(--color-forest-ink)] bg-[var(--color-highlighter-yellow)]"></div>
-                          <div className="w-3 h-3 rounded-full border border-[var(--color-forest-ink)] bg-[var(--color-sticky-note-mint)]"></div>
-                        </div>
-                        <span className="text-[12px] font-mono font-bold text-[var(--color-forest-ink)] ml-2 uppercase tracking-wide">index.js</span>
+                        <span className="text-[12px] font-mono font-bold text-[var(--color-forest-ink)] uppercase tracking-wide">POST /api/video/upload</span>
                       </div>
                       <div className="p-5 overflow-x-auto bg-[#faf8f5]">
                         <pre className="text-[15px] font-mono leading-relaxed">
-                          <span className="text-[#cb5521]">import</span> {'{ GhostFrame }'} <span className="text-[#cb5521]">from</span> <span className="text-[#8a9c7b]">'@ghostframe/node'</span>;{'\n\n'}
-                          <span className="text-[#cb5521]">const</span> client = <span className="text-[#cb5521]">new</span> <span className="font-bold">GhostFrame</span>(process.env.<span className="text-[#cb5521]">GHOSTFRAME_API_KEY</span>);{'\n\n'}
-                          <span className="text-[var(--color-pencil-gray)] italic">// Upload and process the video asynchronously</span>{'\n'}
-                          <span className="text-[#cb5521]">const</span> response = <span className="text-[#cb5521]">await</span> client.videos.<span className="font-bold">removeBackground</span>({'{'}{'\n'}
-                          {'  '}file: <span className="text-[#8a9c7b]">'./raw-footage.mp4'</span>,{'\n'}
-                          {'  '}outputFormat: <span className="text-[#8a9c7b]">'webm'</span>,{'\n'}
-                          {'  '}quality: <span className="text-[#8a9c7b]">'high'</span>{'\n'}
-                          {'}'});{'\n\n'}
-                          console.<span className="font-bold">log</span>(<span className="text-[#8a9c7b]">'Video processed! Download URL:'</span>, response.url);
+                          <span className="text-[var(--color-pencil-gray)] italic">// JSON Body</span>{'\n'}
+                          {`{
+  "originalname": "my-video.mp4",
+  "s3Key": "uploads/178091...mp4"
+}`}
                         </pre>
                       </div>
                     </div>
@@ -140,7 +125,7 @@ export default function DocsPage() {
                   <div className="text-center md:text-left">
                     <h1 className="font-display text-[48px] tracking-tight text-[var(--color-forest-ink)] mb-4 leading-none">Authentication</h1>
                     <p className="text-[18px] text-[var(--color-forest-ink)] opacity-80 font-medium max-w-3xl">
-                      Authenticate your API requests by including your secret API key in the Authorization header.
+                      Authenticate your API requests by including your secret API key in the headers.
                     </p>
                   </div>
                   
@@ -158,23 +143,86 @@ export default function DocsPage() {
                   </div>
 
                   <div className="space-y-4 pt-4">
-                    <h3 className="font-display text-[28px] text-[var(--color-forest-ink)]">Bearer Token</h3>
-                    <p className="text-[16px] text-[var(--color-forest-ink)] opacity-80">Pass your API key as a Bearer token in the header of all HTTP requests.</p>
+                    <h3 className="font-display text-[28px] text-[var(--color-forest-ink)]">API Key Header</h3>
+                    <p className="text-[16px] text-[var(--color-forest-ink)] opacity-80">Pass your API key in the <code className="bg-[var(--color-highlighter-yellow)] px-1 rounded">x-api-key</code> header of all API requests.</p>
                     
                     <div className="bg-[#faf8f5] border-2 border-[var(--color-forest-ink)] rounded-[4px] p-4 font-mono text-[15px] font-bold overflow-x-auto">
-                      <span className="text-[#cb5521]">Authorization:</span> Bearer gf_live_xxxxxxxxxxxxxxxxx
+                      <span className="text-[#cb5521]">x-api-key:</span> gf_xxxxxxxxxxxxxxxxx
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Placeholder for other tabs */}
-              {(activeTab === 'endpoints' || activeTab === 'security') && (
-                <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-[var(--color-pencil-gray)] rounded-[4px] bg-[var(--color-whisper-gray)]/50 mt-10 relative">
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-24 h-6 bg-white/50 border border-[var(--color-pencil-gray)]/50 mix-blend-multiply transform rotate-2"></div>
-                  <FileJson className="w-10 h-10 text-[var(--color-pencil-gray)] mb-4" />
-                  <h3 className="font-display text-[28px] text-[var(--color-forest-ink)] mb-2">Content Drafted</h3>
-                  <p className="text-[16px] text-[var(--color-forest-ink)] opacity-70 text-center max-w-md font-mono">Detailed endpoint schemas and security limits documentation are currently being written.</p>
+              {activeTab === 'security' && (
+                <div className="space-y-10">
+                  <div className="text-center md:text-left">
+                    <h1 className="font-display text-[48px] tracking-tight text-[var(--color-forest-ink)] mb-4 leading-none">Security & Limits</h1>
+                    <p className="text-[18px] text-[var(--color-forest-ink)] opacity-80 font-medium max-w-3xl">
+                      Learn about API rate limits and how to keep your integration secure.
+                    </p>
+                  </div>
+                  
+                  {/* Hand-drawn divider */}
+                  <svg className="w-full h-4 opacity-50" preserveAspectRatio="none" viewBox="0 0 100 10">
+                    <path d="M0,5 Q25,0 50,5 T100,5" fill="none" stroke="var(--color-pencil-gray)" strokeWidth="1" />
+                  </svg>
+
+                  <div className="space-y-6">
+                    <h3 className="font-display text-[28px] text-[var(--color-forest-ink)]">Rate Limits</h3>
+                    <p className="text-[16px] text-[var(--color-forest-ink)] opacity-80">Limits apply to processing endpoints (uploading images/videos). Status checks and downloads are unlimited. Counters auto-reset on the 1st of each month.</p>
+                    
+                    <div className="grid md:grid-cols-2 gap-6 mt-4">
+                      <div className="bg-white border-2 border-[var(--color-forest-ink)] rounded-[8px] p-6 shadow-[4px_4px_0px_0px_var(--color-forest-ink)]">
+                        <h4 className="font-mono font-bold text-[18px] text-[var(--color-forest-ink)] mb-2 uppercase">Free Plan</h4>
+                        <ul className="space-y-2 text-[15px] text-[var(--color-forest-ink)] opacity-80">
+                          <li>• 4 Video Removals / month</li>
+                          <li>• 20 Image Removals / month</li>
+                        </ul>
+                      </div>
+                      <div className="bg-[var(--color-highlighter-yellow)] border-2 border-[var(--color-forest-ink)] rounded-[8px] p-6 shadow-[4px_4px_0px_0px_var(--color-forest-ink)]">
+                        <h4 className="font-mono font-bold text-[18px] text-[var(--color-forest-ink)] mb-2 uppercase">Pro Plan ($1/mo)</h4>
+                        <ul className="space-y-2 text-[15px] text-[var(--color-forest-ink)] opacity-90 font-medium">
+                          <li>• 200 Video Removals / month</li>
+                          <li>• 200 Image Removals / month</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'endpoints' && (
+                <div className="space-y-10">
+                  <div className="text-center md:text-left">
+                    <h1 className="font-display text-[48px] tracking-tight text-[var(--color-forest-ink)] mb-4 leading-none">API Endpoints</h1>
+                    <p className="text-[18px] text-[var(--color-forest-ink)] opacity-80 font-medium max-w-3xl">
+                      A quick reference for the available GhostFrame API endpoints.
+                    </p>
+                  </div>
+                  
+                  {/* Hand-drawn divider */}
+                  <svg className="w-full h-4 opacity-50" preserveAspectRatio="none" viewBox="0 0 100 10">
+                    <path d="M0,5 Q25,0 50,5 T100,5" fill="none" stroke="var(--color-pencil-gray)" strokeWidth="1" />
+                  </svg>
+
+                  <div className="divide-y divide-[var(--color-pencil-gray)] border-2 border-[var(--color-forest-ink)] rounded-[4px] bg-[#faf8f5]">
+                    {[
+                      { method: 'GET', path: '/api/video/upload-url', desc: 'Get a pre-signed S3 URL. Params: fileType, isImage.' },
+                      { method: 'POST', path: '/api/video/upload', desc: 'Submit a video for background removal after uploading to S3.' },
+                      { method: 'POST', path: '/api/video/upload-image', desc: 'Submit an image for background removal after uploading to S3.' },
+                      { method: 'GET', path: '/api/video/status/:taskId', desc: 'Poll task status: queued | processing | completed | failed.' },
+                      { method: 'GET', path: '/api/video/download/:taskId', desc: 'Download the processed WebM video.' },
+                      { method: 'GET', path: '/api/video/download-image/:taskId', desc: 'Download the processed PNG image.' },
+                    ].map(({ method, path, desc }) => (
+                      <div key={path} className="flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-4">
+                        <span className={`font-mono text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded shrink-0 ${method === 'GET' ? 'bg-[var(--color-sticky-note-mint)]' : 'bg-[var(--color-highlighter-yellow)]'} text-[var(--color-forest-ink)] w-fit`}>
+                          {method}
+                        </span>
+                        <code className="font-mono text-[14px] font-bold text-[#8a9c7b]">{path}</code>
+                        <span className="text-[14px] text-[var(--color-forest-ink)] opacity-80 sm:ml-auto">{desc}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
