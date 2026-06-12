@@ -6,3 +6,4 @@ rembg[cpu]
 imageio
 imageio-ffmpeg
 boto3
+Pillow

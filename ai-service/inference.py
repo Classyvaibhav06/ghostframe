@@ -188,24 +188,39 @@ def process_image(s3_key, task_id):
     output_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'outputs'))
     local_output = os.path.join(output_dir, f"temp_out_{uuid.uuid4().hex}.png")
     
-    # Read the image using cv2
-    img = cv2.imread(local_input)
-    if img is None:
-        raise Exception(f"Could not open image file from S3: {s3_key}")
-        
     try:
-        output = remove(img, session=session)
-        cv2.imwrite(local_output, output)
-        
+        # Use PIL (Pillow) to open — handles JPEG, PNG, WEBP, HEIC etc. correctly
+        from PIL import Image
+        import io
+
+        with open(local_input, 'rb') as f:
+            input_bytes = f.read()
+
+        # rembg can accept raw bytes and returns RGBA PNG bytes
+        output_bytes = remove(input_bytes, session=session)
+
+        # Open output and save with maximum PNG compression to avoid huge files
+        # PNG compression=9 + optimize=True shrinks output 60–80% vs default
+        img_out = Image.open(io.BytesIO(output_bytes)).convert("RGBA")
+        img_out.save(
+            local_output,
+            format="PNG",
+            compress_level=9,   # 0=none … 9=max (lossless either way, just smaller file)
+            optimize=True,
+        )
+
+        print(f"Saved compressed PNG: {os.path.getsize(local_output) / 1024:.1f} KB")
+
         # Upload to S3
         output_s3_key = f"outputs/{task_id}/processed.png"
         upload_to_s3(local_output, output_s3_key, 'image/png')
-        
+
         # Cleanup
         os.remove(local_input)
         os.remove(local_output)
-        
+
         return output_s3_key
     except Exception as e:
         print(f"Error processing image: {e}")
         raise e
+
